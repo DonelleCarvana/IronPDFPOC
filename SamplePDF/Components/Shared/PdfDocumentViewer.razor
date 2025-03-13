@@ -1,10 +1,16 @@
 ﻿@if (!string.IsNullOrEmpty(pdfBase64String))
 {
-    <PdfViewer Class="mb-3" Url="@pdfBase64String" />
+    <PdfViewer Class="mb-3" Url="@pdfBase64String"  />
+}
+
+@if (!string.IsNullOrEmpty(changedPdf))
+{
+    <PdfViewer Class="mb-3" Url="@changedPdf" />
 }
 
 @code {
     private string pdfBase64String = default!;
+    private string changedPdf = default!;
     private MemoryStream pdfStream = new ();
 
     [Parameter]
@@ -15,6 +21,7 @@
         await filestream.OpenReadStream().CopyToAsync(pdfStream);
         pdfStream.Seek(0, SeekOrigin.Begin);
 
+        changedPdf = string.Empty;
         pdfBase64String = string.Format("data:application/pdf;base64,{0}", Convert.ToBase64String(pdfStream.ToArray()));
     }
 
@@ -36,7 +43,8 @@
                         Console.WriteLine($"{f.Key} form field not found");
                 }
 
-                pdfBase64String = string.Format("data:application/pdf;base64,{0}", Convert.ToBase64String(pdf.BinaryDataIncremental));
+                pdfBase64String = string.Empty;
+                changedPdf = string.Format("data:application/pdf;base64,{0}", Convert.ToBase64String(pdf.BinaryData));
             }
         }
         catch (Exception e)
