@@ -1,4 +1,7 @@
 ﻿@page "/demo"
+@rendermode InteractiveServer
+@using SamplePDF.Components.Shared
+
 
 <PageTitle>IronPDF POC Demo</PageTitle>
 
@@ -6,7 +9,73 @@
 
 <p>This component demonstrates manipulating/viewing PDF documents using IronPDF Library.</p>
 
+<Offcanvas @ref="offcanvas" Title="Configurations">
+    <BodyTemplate>
+        @foreach (var field in fields)
+        {
+            <PdfConfigItem Placeholder="@field.Key" Value="@field.Value" OnDelete="HandleDeleteClick" />
+        }
+
+        <div class="row">
+            <div class="col-4 text-end">
+                <span>Placeholder:</span>
+                <TextInput @bind-Value="@placeholder" />
+            </div>
+            <div class="col-3 text-end">
+                <span>Value:</span>
+                <TextInput @bind-Value="@value" />
+            </div>
+            <div class="col-5">
+                <Button Color="ButtonColor.Primary"  @onclick="HandleAddClick">
+                   Add
+                </Button>
+            </div>
+        </div>
+
+        <Button Color="ButtonColor.Primary" @onclick="HandleApplyClick">Apply</Button>
+    </BodyTemplate>
+</Offcanvas>
+
+<div>
+    <div>
+        <InputFile Color="ButtonColor.Primary" OnChange="HandleLoadFileAsync" />
+        <Button Color="ButtonColor.Primary" @onclick="HandleAddConfigurationsAsync">Add Placeholders</Button>
+    </div>    
+</div>
+
+<PdfDocumentViewer @ref="pdfDocViewer" Fields="@fields" />
+
 
 @code {
+    private Offcanvas offcanvas = default!;
+    private PdfDocumentViewer pdfDocViewer = default!;
 
+    private string placeholder = string.Empty;
+    private string value = string.Empty;
+
+    readonly private Dictionary<string, string> fields = new();
+
+    async Task HandleAddConfigurationsAsync() {
+        await offcanvas.ShowAsync();
+    }
+
+    void HandleDeleteClick(KeyValuePair<string, string> item) => fields.Remove(item.Key);
+
+    async Task HandleApplyClick()
+    {
+        await offcanvas.HideAsync();
+        pdfDocViewer.ApplyConfigurations();
+    }
+
+    async Task HandleLoadFileAsync(InputFileChangeEventArgs ev)
+    {
+        fields.Clear();
+        await pdfDocViewer.LoadPDFAsync(ev.File);
+    }
+
+    void HandleAddClick()
+    {
+        fields.Add(placeholder, value);
+        placeholder = value = string.Empty;
+    }
 }

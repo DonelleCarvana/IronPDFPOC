@@ -1,0 +1,29 @@
+﻿<div class="row">
+    <div class="col-5 col-md-4 text-end">
+        <span>Placeholder:</span>
+        <TextInput @bind-Value="@Placeholder" />
+    </div>
+    <div class="col-5 col-md-8">
+        <span>Value:</span>
+        <TextInput @bind-Value="@Value" />
+    </div>
+    <Button @onclick="HandleClick">
+        <span class="bi bi-plus-square-fill-nav-menu color-red red" aria-hidden="true"></span>
+    </Button>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    required public string Placeholder { get; set; }
+
+    [Parameter, EditorRequired]
+    required public string Value { get; set;  }
+
+    [Parameter, EditorRequired]
+    required public EventCallback<KeyValuePair<string,string>> OnDelete { get; set; }
+
+    private void HandleClick()
+    {
+        OnDelete.InvokeAsync(new KeyValuePair<string, string>(Placeholder, Value));
+    }
+}

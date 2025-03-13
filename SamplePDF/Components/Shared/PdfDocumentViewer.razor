@@ -1,0 +1,47 @@
+﻿@if (!string.IsNullOrEmpty(pdfBase64String))
+{
+    <PdfViewer Class="mb-3" Url="@pdfBase64String" />
+}
+
+@code {
+    private string pdfBase64String = default!;
+    private MemoryStream pdfStream = new ();
+
+    [Parameter]
+    public Dictionary<string, string> Fields { get; set; } = new();
+
+    public async Task LoadPDFAsync(IBrowserFile filestream)
+    {
+        await filestream.OpenReadStream().CopyToAsync(pdfStream);
+        pdfStream.Seek(0, SeekOrigin.Begin);
+
+        pdfBase64String = string.Format("data:application/pdf;base64,{0}", Convert.ToBase64String(pdfStream.ToArray()));
+    }
+
+    public void ApplyConfigurations()
+    {
+        pdfStream.Seek(0, SeekOrigin.Begin);
+        using var pdf = new PdfDocument(pdfStream.ToArray(), TrackChanges: IronPdf.Rendering.ChangeTrackingModes.EnableChangeTracking);
+
+        try
+        {
+            if (Fields.Count > 0)
+            {
+                foreach (var f in Fields)
+                {
+                    var fm = pdf.Form.FindFormField(f.Key);
+                    if (fm != null)
+                        fm.Value = f.Value;
+                    else
+                        Console.WriteLine($"{f.Key} form field not found");
+                }
+
+                pdfBase64String = string.Format("data:application/pdf;base64,{0}", Convert.ToBase64String(pdf.BinaryDataIncremental));
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}
